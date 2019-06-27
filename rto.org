@@ -109,6 +109,11 @@ Lot of broadcast traffic on the internet.
 
 + Example - proxy discovery / autoconfiguration
 
++ NTLMv2 hash capture -> cracking
++ If the server requires SMB signing, then MITM is harder (but they say there are still tricks around that)
+
+**** TODO ntlmrelay to reflect 
+[[https://byt3bl33d3r.github.io/practical-guide-to-ntlm-relaying-in-2017-aka-getting-a-foothold-in-under-5-minutes.html][Guide to NTLM relaying]]
 
 
 ** General RTO Tips
