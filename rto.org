@@ -1,7 +1,7 @@
 * Red Teaming
 ** Definition
-Testing your own organization of the unexpected by acting as 
-a simulated adversary, in a simulated attack.
+Testing your own organization of the unexpected by acting as a simulated adversary, 
+in a simulated attack within a set amount of time.
 
 *** What it is not
 
@@ -50,8 +50,61 @@ Tactics, techniques, mostly from the blue team perspective
    + Collect new information
 4. Using the newly obtained access / information / foothold, go back to 1
 
-** Tips
-- You should have an online presence to back your story up
+** TNE
+
+*** Connecting to the network
+
+**** Blending in
+1. Try not to stand out
+   + Using a hostname that doesn't stand out
+   + Using a MAC that doesn't stand out
+
+**** High-level approach
++ Passively connect to the network and monitor the traffic
++ Analyze the traffic to identify hostname convention, MAC family & vendor, DHCP settings
+
+**** disable dhcp, disable network manager, so we don't request DHCP
++ systemctl
+
+***** TODO netdiscover - shows which mac addresses are connected to which hosts
+***** TODO networkminer - analyze pcap capture, can show hosts, images, messages, credentials
+***** TODO macchanger - change MAC address, to spoof another device
+***** TODO dhclient - configure DHCP
+
+**** Checklist before connecting
++ disable dhcp
+  * systemctl stop
++ disable network manager
++ don't use the same network interface from your laptop, if using VM, use and external USB network adapter
++ reboot system after changing the hostname
++ do all the above before connecting the cable
++ make sure no interfaces are autoconfigured to avoid alerting the blue team
+
+**** Report tracking
++ make notes with what MAC address was used, which hostname was used, dhcp, timestamps
+
+*** Information gathering
+
+**** Test systems
+Test instances are very interesting to hackers, as they are not monitored as much as production systems.
+Test domains could also be useful due to password reuse
+
+**** Who's who system is useful to spot administrators (system/db/...)
+
+***** TODO nmap
++ could be made stealthy with the right options, some scans are risky
++ *don't scan too fast*, especially over routers or subnets - throttle
++ syn scans don't show up in the logs of devices, but in logs of the *routers*
++ can also try to scan for gateways to locate live IP ranges
+
+** General RTO Tips
++ You should have an online presence to back your story up
 (in case the receptionist googles you)
 
-- 
++ Gain - we can capitalize from the victiom
+  * Directly - capturing funds 
+  * Indirectly - capturing information we can sell for funds
+
++ Make the organization more secure than the next one - locked bicycle example, as the one next to yours which looks less secure is more likely to be stolen
+
++ Default passwords are your friends
