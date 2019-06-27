@@ -127,3 +127,5 @@ Lot of broadcast traffic on the internet.
 + Make the organization more secure than the next one - locked bicycle example, as the one next to yours which looks less secure is more likely to be stolen
 
 + Default passwords are your friends
+
++ Some users are local administrators on their systems
