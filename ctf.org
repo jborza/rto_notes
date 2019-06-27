@@ -197,7 +197,8 @@ https://jenkins.io/security/advisory/2018-12-05/
 - file gets disappeared
 14:43
 
-Extracted excel file from .25
+Extracted excel file from .25 - 
+ + cracked the password - WildFred8300
 
 14:48 - got meterpreter on .24
 running ~msv~ shows users EDWARDS
@@ -236,12 +237,13 @@ shows
         </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
       </java.util.concurrent.CopyOnWriteArrayList>
 
-*** Password decrypt:
+*** Password decrypt in jenkins:
 https://devops.stackexchange.com/questions/2191/how-to-decrypt-jenkins-passwords-from-credentials-xml
 
 go to [jenkins]/script
 
-*** Run this in jenkins script
+*** Run this in jenkins script 
+Jenkins script windows - http://10.59.4.13:8080/script
 println(hudson.util.Secret.decrypt("{AQAAABAAAAAgpZgjaIfvHZiqDJFBXbvDTALaaa4jgkVj28x3VWNb9W/2Bfoa2X2k0bmRkYZltydM}"))
 
 Tomcat manager:
@@ -256,7 +258,7 @@ password: This is not the password you're looking for.
 *** Vault - .13
 http://10.59.4.13:8080/vsEncryptionPhrase
 
-*** Tomcat exploitation
+*** *Tomcat* exploitation
 
 Password for the tomcat manager: 
 Result: $zFSKM#o#S3QrDS!D(nq
@@ -293,8 +295,26 @@ md5 reverse of '5033b55c74e5c56686f25bb6f2d21f79' == funkeymonkey124
 -> worked for Federico in Vault
 -> username = admin, password was funkeymonkey124
 
+OS on the .13 machine is Ubuntu 16.04 LTS
+
 *** ssh passphrase in the vault
 Aiwaib6s
+
+*** Menno cracked an excel file
+The encrypted excel file was using a password which also worked for KeePass
+
+*** TODO jenkins slave - Dev Server
+http://10.59.4.14:8080/computer/dev_server/systemInfo
+Java 10.0.1
+Windows Server 2012 R2
+user.name	DEV_SERVER$
+10.59.4.12
+
+** Observations from day 1
+
+*** Better notekeeping - shared notes
+*** Better oversight of getting to the goal
+*** Keep track of 
 
 * Challenge 4
 
