@@ -4,4 +4,25 @@
 Testing your own organization of the unexpected by acting as 
 a simulated adversary, in a simulated attack.
 
+*** What it is not
+
+Exploiting everything we can find - probably not, there can be honeypots on the network.
+If the action is not going to take us closer to the objective, let's not pursue it,
+we cannot go everywhere due to limited time.
+
+*** Cleaning up after the engagement
+
+Cleaning up may not be necessary - depending on the engagement.
+
+If you do a full clean up afterwards, it's going to be harder 
+for the blue team to investigate. Part of the blue team workshop
+should be to train the team. 
+
+This can depend on the maturity of the target organization, 
+to see if they are shipping logs and can search from that.
+
+*** Tips
+You should have an online presence to back your story up
+(in case the receptionist googles you)
+
 
