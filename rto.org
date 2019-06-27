@@ -1,6 +1,5 @@
-* Day 1
-** Red Teaming
-*** Definition
+* Red Teaming
+** Definition
 Testing your own organization of the unexpected by acting as 
 a simulated adversary, in a simulated attack.
 
@@ -21,8 +20,38 @@ should be to train the team.
 This can depend on the maturity of the target organization, 
 to see if they are shipping logs and can search from that.
 
-*** Tips
-You should have an online presence to back your story up
+** Models - Killchains
+
+*** Lockheed Martin killchain
+A popular model, waterfall based.
+
+*** SWC killchain
+Specific for Microsoft solution, has some cycles in it, focused on Windows domains.
+
+- first is low privilege, lateral movement, escalation cycle
+- next is high privilege, lateral movement, escalation cycle
+
+*** Mitre att&ck framework
+
+Tactics, techniques, mostly from the blue team perspective
+
+*** Core Red-Teaming / TNE cycle
+
+1. Gather information (passive)
+   + Enumerate systems, services, ports
+   + Collect info from them
+2. Combine existing information
+   + Prepare exploit
+   + Evade A/V
+   + Prepare phishing scenario
+3. Execute attack (active)
+   + Execute an exploit
+   + Send a phish
+   + Collect new information
+4. Using the newly obtained access / information / foothold, go back to 1
+
+** Tips
+- You should have an online presence to back your story up
 (in case the receptionist googles you)
 
-
+- 
