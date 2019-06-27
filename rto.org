@@ -91,11 +91,25 @@ Test domains could also be useful due to password reuse
 
 **** Who's who system is useful to spot administrators (system/db/...)
 
-***** TODO nmap
+***** TODO nmap :: port scanner
 + could be made stealthy with the right options, some scans are risky
++ think about ports you'd like to scan to give you usable information
+  * potentially interesting ports, like 80 (web server), if ssh is at 22, it already tells us it's linux, 3389 tell us there is RDP 
 + *don't scan too fast*, especially over routers or subnets - throttle
 + syn scans don't show up in the logs of devices, but in logs of the *routers*
 + can also try to scan for gateways to locate live IP ranges
++ port scan usually from one host (why?)
+
+**** TODO responder
+[[https://tools.kali.org/sniffingspoofing/responder][Kali docs on responder]]
+Responds to name resolutions - specific netbios resolutions
+Lot of broadcast traffic on the internet. 
+
+*The objective is to make systems connect to you*, preferrably in a way that includes authentication.
+
++ Example - proxy discovery / autoconfiguration
+
+
 
 ** General RTO Tips
 + You should have an online presence to back your story up
