@@ -1,7 +1,11 @@
+[[ctf.org][CTF writeup]]
+
 * Red Teaming
 ** Definition
 Testing your own organization of the unexpected by acting as a simulated adversary, 
 in a simulated attack within a set amount of time.
+
+
 
 *** What it is not
 
